@@ -134,6 +134,8 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
 
     boolean mIsUsingBlackUI;
 
+    int mNavBarHeight;
+
     final SoundPool mBellSoundPool = new SoundPool.Builder().setMaxStreams(1).setAudioAttributes(
         new AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION).build()).build();
@@ -214,7 +216,18 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
 
         super.onCreate(bundle);
 
+
         setContentView(R.layout.drawer_layout);
+
+        View content = findViewById(android.R.id.content);
+        content.setOnApplyWindowInsetsListener((v, insets) -> {
+            mNavBarHeight = insets.getSystemWindowInsetBottom();
+            return insets;
+        });
+
+        if (mSettings.isUsingFullScreen()) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
 
         if (mIsUsingBlackUI) {
             findViewById(R.id.left_drawer).setBackgroundColor(
@@ -256,6 +269,12 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
                 if (position == 0) {
                     layout = mExtraKeysView = (ExtraKeysView) inflater.inflate(R.layout.extra_keys_main, collection, false);
                     mExtraKeysView.reload(mSettings.mExtraKeys);
+
+                    // apply extra keys fix if enabled in prefs
+                    if (mSettings.isUsingFullScreen() && mSettings.isUsingFullScreenWorkAround()) {
+                        FullScreenWorkAround.apply(TermuxActivity.this);
+                    }
+
                 } else {
                     layout = inflater.inflate(R.layout.extra_keys_right, collection, false);
                     final EditText editText = layout.findViewById(R.id.text_input);
@@ -329,6 +348,10 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
         mBellSoundId = mBellSoundPool.load(this, R.raw.bell, 1);
 
         sendOpenedBroadcast();
+    }
+
+    public int getNavBarHeight() {
+        return mNavBarHeight;
     }
 
     /**
@@ -629,7 +652,14 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
                 .setPositiveButton(android.R.string.ok, null).show();
         } else {
             TerminalSession currentSession = getCurrentTermSession();
-            String workingDirectory = (currentSession == null) ? null : currentSession.getCwd();
+
+            String workingDirectory;
+            if (currentSession == null) {
+                workingDirectory = mSettings.mDefaultWorkingDir;
+            } else {
+                workingDirectory = currentSession.getCwd();
+            }
+
             TerminalSession newSession = mTermService.createTermSession(null, null, workingDirectory, failSafe);
             if (sessionName != null) {
                 newSession.mSessionName = sessionName;
