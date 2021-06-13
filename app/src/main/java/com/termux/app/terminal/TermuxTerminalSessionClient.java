@@ -207,6 +207,13 @@ public class TermuxTerminalSessionClient extends TermuxTerminalSessionClientBase
 
 
 
+    @Override
+    public Integer getTerminalCursorStyle() {
+        return mActivity.getProperties().getTerminalCursorStyle();
+    }
+
+
+
     /** Initialize and get mBellSoundPool */
     private synchronized SoundPool getBellSoundPool() {
         if (mBellSoundPool == null) {
@@ -248,8 +255,10 @@ public class TermuxTerminalSessionClient extends TermuxTerminalSessionClientBase
     void notifyOfSessionChange() {
         if (!mActivity.isVisible()) return;
 
-        TerminalSession session = mActivity.getCurrentSession();
-        mActivity.showToast(toToastTitle(session), false);
+        if (!mActivity.getProperties().areTerminalSessionChangeToastsDisabled()) {
+            TerminalSession session = mActivity.getCurrentSession();
+            mActivity.showToast(toToastTitle(session), false);
+        }
     }
 
     public void switchToSession(boolean forward) {

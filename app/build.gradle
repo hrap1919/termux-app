@@ -26,8 +26,8 @@ android {
         applicationId "com.termux"
         minSdkVersion project.properties.minSdkVersion.toInteger()
         targetSdkVersion project.properties.targetSdkVersion.toInteger()
-        versionCode 113
-        versionName "0.113"
+        versionCode 114
+        versionName "0.114"
 
         manifestPlaceholders.TERMUX_PACKAGE_NAME = "com.termux"
         manifestPlaceholders.TERMUX_APP_NAME = "Termux"
@@ -150,11 +150,11 @@ clean {
 
 task downloadBootstraps() {
     doLast {
-        def version = "2021.05.16-r1"
-        downloadBootstrap("aarch64", "6e340d8ab11d1225b89ee920e0884cbbd944d37765d81c5b06ef34579564fd9a", version)
-        downloadBootstrap("arm",     "3f02bc2b5bd45c2ec5170527e39ee0413246698f11be4799c7bde6d364cfd780", version)
-        downloadBootstrap("i686",    "36a3733fb2d8531d7f8abd989b711919872b9e8a79d7eb2e8b00bef467199187", version)
-        downloadBootstrap("x86_64",  "3885376cc514220c0803e38f70b25f837854029fff2b7fda7a81452623cd9074", version)
+        def version = "2021.06.04-r1"
+        downloadBootstrap("aarch64", "115409ec8abe096080f9e6d9b2765e009c818b3e5aff0133792182009388b81e", version)
+        downloadBootstrap("arm",     "c289688d4f9aabd86240a4d3e25bd89c1a96641e0d085d9ee5a471e9f019e16f", version)
+        downloadBootstrap("i686",    "63cfb8e39cac20cecbe9e9890f49a30d7454d4c4dfa2b22b5d0cc6de1dc59726", version)
+        downloadBootstrap("x86_64",  "db47007825e65f8ed15fc46d6b8e3119b01ca4a9856d7c7e5604cf804e753ba2", version)
     }
 }
 

@@ -2,6 +2,7 @@ package com.termux.shared.models;
 
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.Intent;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -80,6 +81,10 @@ public class ExecutionCommand {
     public String workingDirectory;
 
 
+    /** The terminal transcript rows for the {@link ExecutionCommand}. */
+    public Integer terminalTranscriptRows;
+
+
     /** If the {@link ExecutionCommand} is a background or a foreground terminal session command. */
     public boolean inBackground;
     /** If the {@link ExecutionCommand} is meant to start a failsafe terminal session. */
@@ -106,9 +111,10 @@ public class ExecutionCommand {
 
 
     /** Defines if {@link ExecutionCommand} was started because of an external plugin request
-     * like {@link TERMUX_SERVICE#ACTION_SERVICE_EXECUTE} intent or from within Termux app itself.
-     */
+     * like {@link TERMUX_SERVICE#ACTION_SERVICE_EXECUTE} intent or from within Termux app itself. */
     public boolean isPluginExecutionCommand;
+    /** Defines the {@link Intent} received from the external plugin which started the {@link ExecutionCommand}. */
+    public Intent pluginIntent;
     /** Defines {@link PendingIntent} that should be sent if an external plugin requested the execution. */
     public PendingIntent pluginPendingIntent;
 

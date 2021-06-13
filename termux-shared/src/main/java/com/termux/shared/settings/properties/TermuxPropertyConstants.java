@@ -3,6 +3,7 @@ package com.termux.shared.settings.properties;
 import com.google.common.collect.ImmutableBiMap;
 import com.termux.shared.termux.TermuxConstants;
 import com.termux.shared.logger.Logger;
+import com.termux.terminal.TerminalEmulator;
 import com.termux.view.TerminalView;
 
 import java.io.File;
@@ -11,7 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /*
- * Version: v0.10.0
+ * Version: v0.12.0
  *
  * Changelog
  *
@@ -49,6 +50,11 @@ import java.util.Set;
  * - 0.10.0 (2021-05-15)
  *      - Add `MAP_BACK_KEY_BEHAVIOUR`, `MAP_SOFT_KEYBOARD_TOGGLE_BEHAVIOUR`, `MAP_VOLUME_KEYS_BEHAVIOUR`.
  *
+ * - 0.11.0 (2021-06-10)
+ *      - Add `*KEY_TERMINAL_TRANSCRIPT_ROWS*`.
+ *
+ * - 0.12.0 (2021-06-10)
+ *      - Add `*KEY_TERMINAL_CURSOR_STYLE*`.
  */
 
 /**
@@ -65,6 +71,11 @@ import java.util.Set;
 public final class TermuxPropertyConstants {
 
     /* boolean */
+
+    /** Defines the key for whether a toast will be shown when user changes the terminal session */
+    public static final String KEY_DISABLE_TERMINAL_SESSION_CHANGE_TOAST =  "disable-terminal-session-change-toast"; // Default: "disable-terminal-session-change-toast"
+
+
 
     /** Defines the key for whether to enforce character based input to fix the issue where for some devices like Samsung, the letters might not appear until enter is pressed */
     public static final String KEY_ENFORCE_CHAR_BASED_INPUT =  "enforce-char-based-input"; // Default: "enforce-char-based-input"
@@ -128,6 +139,36 @@ public final class TermuxPropertyConstants {
     public static final int IVALUE_TERMINAL_CURSOR_BLINK_RATE_MIN = TerminalView.TERMINAL_CURSOR_BLINK_RATE_MIN;
     public static final int IVALUE_TERMINAL_CURSOR_BLINK_RATE_MAX = TerminalView.TERMINAL_CURSOR_BLINK_RATE_MAX;
     public static final int DEFAULT_IVALUE_TERMINAL_CURSOR_BLINK_RATE = 0;
+
+
+
+    /** Defines the key for the terminal cursor style */
+    public static final String KEY_TERMINAL_CURSOR_STYLE =  "terminal-cursor-style"; // Default: "terminal-cursor-style"
+
+    public static final String VALUE_TERMINAL_CURSOR_STYLE_BLOCK = "block";
+    public static final String VALUE_TERMINAL_CURSOR_STYLE_UNDERLINE = "underline";
+    public static final String VALUE_TERMINAL_CURSOR_STYLE_BAR = "bar";
+
+    public static final int IVALUE_TERMINAL_CURSOR_STYLE_BLOCK = TerminalEmulator.TERMINAL_CURSOR_STYLE_BLOCK;
+    public static final int IVALUE_TERMINAL_CURSOR_STYLE_UNDERLINE = TerminalEmulator.TERMINAL_CURSOR_STYLE_UNDERLINE;
+    public static final int IVALUE_TERMINAL_CURSOR_STYLE_BAR = TerminalEmulator.TERMINAL_CURSOR_STYLE_BAR;
+    public static final int DEFAULT_IVALUE_TERMINAL_CURSOR_STYLE = TerminalEmulator.DEFAULT_TERMINAL_CURSOR_STYLE;
+
+    /** Defines the bidirectional map for terminal cursor styles and their internal values */
+    public static final ImmutableBiMap<String, Integer> MAP_TERMINAL_CURSOR_STYLE =
+        new ImmutableBiMap.Builder<String, Integer>()
+            .put(VALUE_TERMINAL_CURSOR_STYLE_BLOCK, IVALUE_TERMINAL_CURSOR_STYLE_BLOCK)
+            .put(VALUE_TERMINAL_CURSOR_STYLE_UNDERLINE, IVALUE_TERMINAL_CURSOR_STYLE_UNDERLINE)
+            .put(VALUE_TERMINAL_CURSOR_STYLE_BAR, IVALUE_TERMINAL_CURSOR_STYLE_BAR)
+            .build();
+
+
+
+    /** Defines the key for the terminal transcript rows */
+    public static final String KEY_TERMINAL_TRANSCRIPT_ROWS =  "terminal-transcript-rows"; // Default: "terminal-transcript-rows"
+    public static final int IVALUE_TERMINAL_TRANSCRIPT_ROWS_MIN = TerminalEmulator.TERMINAL_TRANSCRIPT_ROWS_MIN;
+    public static final int IVALUE_TERMINAL_TRANSCRIPT_ROWS_MAX = TerminalEmulator.TERMINAL_TRANSCRIPT_ROWS_MAX;
+    public static final int DEFAULT_IVALUE_TERMINAL_TRANSCRIPT_ROWS = TerminalEmulator.DEFAULT_TERMINAL_TRANSCRIPT_ROWS;
 
 
 
@@ -201,7 +242,8 @@ public final class TermuxPropertyConstants {
 
     /** Defines the key for extra keys */
     public static final String KEY_EXTRA_KEYS =  "extra-keys"; // Default: "extra-keys"
-    public static final String DEFAULT_IVALUE_EXTRA_KEYS = "[[ESC, TAB, CTRL, ALT, {key: '-', popup: '|'}, DOWN, UP]]";
+    //public static final String DEFAULT_IVALUE_EXTRA_KEYS = "[[ESC, TAB, CTRL, ALT, {key: '-', popup: '|'}, DOWN, UP]]"; // Single row
+    public static final String DEFAULT_IVALUE_EXTRA_KEYS = "[['ESC','/',{key: '-', popup: '|'},'HOME','UP','END','PGUP'], ['TAB','CTRL','ALT','LEFT','DOWN','RIGHT','PGDN']]"; // Double row
 
     /** Defines the key for extra keys style */
     public static final String KEY_EXTRA_KEYS_STYLE =  "extra-keys-style"; // Default: "extra-keys-style"
@@ -248,6 +290,7 @@ public final class TermuxPropertyConstants {
      * */
     public static final Set<String> TERMUX_PROPERTIES_LIST = new HashSet<>(Arrays.asList(
         /* boolean */
+        KEY_DISABLE_TERMINAL_SESSION_CHANGE_TOAST,
         KEY_ENFORCE_CHAR_BASED_INPUT,
         KEY_HIDE_SOFT_KEYBOARD_ON_STARTUP,
         KEY_USE_BLACK_UI,
@@ -259,6 +302,8 @@ public final class TermuxPropertyConstants {
         /* int */
         KEY_BELL_BEHAVIOUR,
         KEY_TERMINAL_CURSOR_BLINK_RATE,
+        KEY_TERMINAL_CURSOR_STYLE,
+        KEY_TERMINAL_TRANSCRIPT_ROWS,
 
         /* float */
         KEY_TERMINAL_TOOLBAR_HEIGHT_SCALE_FACTOR,
@@ -284,6 +329,7 @@ public final class TermuxPropertyConstants {
      * default: false
      * */
     public static final Set<String> TERMUX_DEFAULT_BOOLEAN_BEHAVIOUR_PROPERTIES_LIST = new HashSet<>(Arrays.asList(
+        KEY_DISABLE_TERMINAL_SESSION_CHANGE_TOAST,
         KEY_ENFORCE_CHAR_BASED_INPUT,
         KEY_HIDE_SOFT_KEYBOARD_ON_STARTUP,
         KEY_USE_CTRL_SPACE_WORKAROUND,

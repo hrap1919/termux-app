@@ -30,6 +30,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.termux.R;
+import com.termux.app.terminal.TermuxActivityRootView;
 import com.termux.shared.termux.TermuxConstants;
 import com.termux.shared.termux.TermuxConstants.TERMUX_APP.TERMUX_ACTIVITY;
 import com.termux.app.activities.HelpActivity;
@@ -68,7 +69,6 @@ import androidx.viewpager.widget.ViewPager;
  */
 public final class TermuxActivity extends Activity implements ServiceConnection {
 
-
     /**
      * The connection to the {@link TermuxService}. Requested in {@link #onCreate(Bundle)} with a call to
      * {@link #bindService(Intent, ServiceConnection, int)}, and obtained and stored in
@@ -77,7 +77,7 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
     TermuxService mTermuxService;
 
     /**
-     * The main view of the activity showing the terminal. Initialized in onCreate().
+     * The {@link TerminalView} shown in  {@link TermuxActivity} that displays the terminal.
      */
     TerminalView mTerminalView;
 
@@ -104,6 +104,16 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
     private TermuxAppSharedProperties mProperties;
 
     /**
+     * The root view of the {@link TermuxActivity}.
+     */
+    TermuxActivityRootView mTermuxActivityRootView;
+
+    /**
+     * The space at the bottom of {@link @mTermuxActivityRootView} of the {@link TermuxActivity}.
+     */
+    View mTermuxActivityBottomSpaceView;
+
+    /**
      * The terminal extra keys view.
      */
     ExtraKeysView mExtraKeysView;
@@ -128,6 +138,11 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
      * time, so if the session causing a change is not in the foreground it should probably be treated as background.
      */
     private boolean mIsVisible;
+
+    /**
+     * If onResume() was called after onCreate().
+     */
+    private boolean isOnResumeAfterOnCreate = false;
 
     /**
      * The {@link TermuxActivity} is in an invalid state and must not be run.
@@ -160,6 +175,7 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
     public void onCreate(Bundle savedInstanceState) {
 
         Logger.logDebug(LOG_TAG, "onCreate");
+        isOnResumeAfterOnCreate = true;
 
         // Check if a crash happened on last run of the app and show a
         // notification with the crash details if it did
@@ -182,6 +198,10 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
             mIsInvalidState = true;
             return;
         }
+
+        mTermuxActivityRootView = findViewById(R.id.activity_termux_root_view);
+        mTermuxActivityRootView.setActivity(this);
+        mTermuxActivityBottomSpaceView = findViewById(R.id.activity_termux_bottom_space_view);
 
         View content = findViewById(android.R.id.content);
         content.setOnApplyWindowInsetsListener((v, insets) -> {
@@ -235,6 +255,8 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
         if (mTermuxTerminalViewClient != null)
             mTermuxTerminalViewClient.onStart();
 
+        addTermuxActivityRootViewGlobalLayoutListener();
+
         registerTermuxActivityBroadcastReceiver();
     }
 
@@ -251,6 +273,8 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
 
         if (mTermuxTerminalViewClient != null)
             mTermuxTerminalViewClient.onResume();
+
+        isOnResumeAfterOnCreate = false;
     }
 
     @Override
@@ -268,6 +292,8 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
 
         if (mTermuxTerminalViewClient != null)
             mTermuxTerminalViewClient.onStop();
+
+        removeTermuxActivityRootViewGlobalLayoutListener();
 
         unregisterTermuxActivityBroadcastReceiever();
         getDrawer().closeDrawers();
@@ -382,6 +408,17 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
 
 
 
+    public void addTermuxActivityRootViewGlobalLayoutListener() {
+        getTermuxActivityRootView().getViewTreeObserver().addOnGlobalLayoutListener(getTermuxActivityRootView());
+    }
+
+    public void removeTermuxActivityRootViewGlobalLayoutListener() {
+        if (getTermuxActivityRootView() != null)
+            getTermuxActivityRootView().getViewTreeObserver().removeOnGlobalLayoutListener(getTermuxActivityRootView());
+    }
+
+
+
     private void setTermuxTerminalViewAndClients() {
         // Set termux terminal view and session clients
         mTermuxTerminalSessionClient = new TermuxTerminalSessionClient(this);
@@ -430,8 +467,8 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
         if (terminalToolbarViewPager == null) return;
         ViewGroup.LayoutParams layoutParams = terminalToolbarViewPager.getLayoutParams();
         layoutParams.height = (int) Math.round(mTerminalToolbarDefaultHeight *
-                                                (mProperties.getExtraKeysInfo() == null ? 0 : mProperties.getExtraKeysInfo().getMatrix().length) *
-                                                    mProperties.getTerminalToolbarHeightScaleFactor());
+            (mProperties.getExtraKeysInfo() == null ? 0 : mProperties.getExtraKeysInfo().getMatrix().length) *
+            mProperties.getTerminalToolbarHeightScaleFactor());
         terminalToolbarViewPager.setLayoutParams(layoutParams);
     }
 
@@ -671,6 +708,14 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
         return mNavBarHeight;
     }
 
+    public TermuxActivityRootView getTermuxActivityRootView() {
+        return mTermuxActivityRootView;
+    }
+
+    public View getTermuxActivityBottomSpaceView() {
+        return mTermuxActivityBottomSpaceView;
+    }
+
     public ExtraKeysView getExtraKeysView() {
         return mExtraKeysView;
     }
@@ -689,6 +734,10 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
 
     public boolean isVisible() {
         return mIsVisible;
+    }
+
+    public boolean isOnResumeAfterOnCreate() {
+        return isOnResumeAfterOnCreate;
     }
 
 
@@ -796,6 +845,9 @@ public final class TermuxActivity extends Activity implements ServiceConnection 
 
         if (mTermuxTerminalViewClient != null)
             mTermuxTerminalViewClient.onReload();
+
+        if (mTermuxService != null)
+            mTermuxService.setTerminalTranscriptRows();
 
         // To change the activity and drawer theme, activity needs to be recreated.
         // But this will destroy the activity, and will call the onCreate() again.
