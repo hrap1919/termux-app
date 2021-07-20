@@ -14,7 +14,7 @@ import android.widget.ListView;
 
 import com.termux.R;
 import com.termux.shared.shell.TermuxSession;
-import com.termux.shared.interact.DialogUtils;
+import com.termux.shared.interact.TextInputDialogUtils;
 import com.termux.app.TermuxActivity;
 import com.termux.shared.terminal.TermuxTerminalSessionClientBase;
 import com.termux.shared.termux.TermuxConstants;
@@ -162,11 +162,23 @@ public class TermuxTerminalSessionClient extends TermuxTerminalSessionClientBase
     }
 
     @Override
-    public void onClipboardText(TerminalSession session, String text) {
+    public void onCopyTextToClipboard(TerminalSession session, String text) {
         if (!mActivity.isVisible()) return;
 
         ClipboardManager clipboard = (ClipboardManager) mActivity.getSystemService(Context.CLIPBOARD_SERVICE);
         clipboard.setPrimaryClip(new ClipData(null, new String[]{"text/plain"}, new ClipData.Item(text)));
+    }
+
+    @Override
+    public void onPasteTextFromClipboard(TerminalSession session) {
+        if (!mActivity.isVisible()) return;
+
+        ClipboardManager clipboard = (ClipboardManager) mActivity.getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clipData = clipboard.getPrimaryClip();
+        if (clipData != null) {
+            CharSequence paste = clipData.getItemAt(0).coerceToText(mActivity);
+            if (!TextUtils.isEmpty(paste)) mActivity.getTerminalView().mEmulator.paste(paste.toString());
+        }
     }
 
     @Override
@@ -203,6 +215,15 @@ public class TermuxTerminalSessionClient extends TermuxTerminalSessionClientBase
         // If cursor is to enabled now, then start cursor blinking if blinking is enabled
         // otherwise stop cursor blinking
         mActivity.getTerminalView().setTerminalCursorBlinkerState(enabled, false);
+    }
+
+    /**
+     * Should be called when mActivity.onResetTerminalSession() is called
+     */
+    public void onResetTerminalSession() {
+        // Ensure blinker starts again after reset if cursor blinking was disabled before reset like
+        // with "tput civis" which would have called onTerminalCursorStateChange()
+        mActivity.getTerminalView().setTerminalCursorBlinkerState(true, true);
     }
 
 
@@ -292,7 +313,7 @@ public class TermuxTerminalSessionClient extends TermuxTerminalSessionClientBase
     public void renameSession(final TerminalSession sessionToRename) {
         if (sessionToRename == null) return;
 
-        DialogUtils.textInput(mActivity, R.string.title_rename_session, sessionToRename.mSessionName, R.string.action_rename_session_confirm, text -> {
+        TextInputDialogUtils.textInput(mActivity, R.string.title_rename_session, sessionToRename.mSessionName, R.string.action_rename_session_confirm, text -> {
             sessionToRename.mSessionName = text;
             termuxSessionListNotifyUpdated();
         }, -1, null, -1, null, null);
